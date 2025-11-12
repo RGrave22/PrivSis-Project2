@@ -1,8 +1,10 @@
 package pt.unl.fct.pds;
 
-import pt.unl.fct.pds.project2.model.Node;
-import pt.unl.fct.pds.project2.model.Circuit;
-import pt.unl.fct.pds.project2.utils.ConsensusParser;
+import pt.unl.fct.pds.model.Node;
+import pt.unl.fct.pds.model.Circuit;
+import pt.unl.fct.pds.utils.ConsensusParser;
+
+import java.util.Arrays;
 
 
 /**
@@ -15,5 +17,15 @@ public class Project2
     {
         // Here we write our logic to choose circuits!
         System.out.println("Welcome to the Circuit Simulator!");
+
+        //Ficheiro com o consensus
+        String consensusFile = "resources/consensus.txt";
+
+        ConsensusParser parser = new ConsensusParser(consensusFile);
+        Node[] nodes = parser.parseConsensus();
+
+        System.out.println(Arrays.toString(nodes));
+
+
     }
 }

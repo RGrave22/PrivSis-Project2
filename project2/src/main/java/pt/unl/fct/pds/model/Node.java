@@ -1,4 +1,4 @@
-package pt.unl.fct.pds.project2.model;
+package pt.unl.fct.pds.model;
 
 import java.time.LocalDateTime;
 import java.util.Arrays;
@@ -68,4 +68,23 @@ public class Node {
     public void setBandwidth(int bandwidth) {this.bandwidth = bandwidth;}
     public void setCountry(String country) {this.country = country;}
     public void setExitPolicy(String exitPolicy) {this.exitPolicy = exitPolicy;}
+
+    @Override
+    public String toString() {
+        return "Node{" +
+                "nickname='" + nickname + '\'' +
+                ", fingerprint='" + fingerprint + '\'' +
+                ", timePublished=" + timePublished +
+                ", ipAddress='" + ipAddress + '\'' +
+                ", orPort=" + orPort +
+                ", dirPort=" + dirPort +
+                ", flags=" + Arrays.toString(flags) +
+                ", version='" + version + '\'' +
+                ", bandwidth=" + bandwidth +
+                ", country='" + country + '\'' +
+                ", exitPolicy='" + exitPolicy + '\'' +
+                '}';
+    }
+
+
 }
