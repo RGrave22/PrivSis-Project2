@@ -31,7 +31,16 @@ public class ConsensusParser {
     public String getFilename() {return filename;}
     public void setFilename(String filename) {this.filename = filename;}
 
+    @FunctionalInterface
+    public interface NodeCallback {
+        void onNodeParsed(Node node);
+    }
+
     public Node[] parseConsensus() {
+        return parseConsensusWithCallback(null);
+    }
+    
+    public Node[] parseConsensusWithCallback(NodeCallback callback) {
         List<Node> nodes = new ArrayList<Node>();
 
         try {
@@ -51,10 +60,12 @@ public class ConsensusParser {
                 switch (split[0]) {
                     case "r":
 
-                        //Da add do anterior
                         if(currentNode != null){
                             System.out.println("Adding new node: " + currentNode.toString());
                             nodes.add(currentNode);
+                            if(callback != null) {
+                                callback.onNodeParsed(currentNode);
+                            }
                         }
 
                         currentNode = new Node();
@@ -79,7 +90,6 @@ public class ConsensusParser {
                         break;
 
                     case "a":
-                        // É para igonrar?
                         break;
 
                     case "s":
@@ -127,6 +137,10 @@ public class ConsensusParser {
             if(currentNode != null){
                 System.out.println("Adding new node: " + currentNode.toString());
                 nodes.add(currentNode);
+                // Chamar callback se fornecido
+                if(callback != null) {
+                    callback.onNodeParsed(currentNode);
+                }
             }
 
             return nodes.toArray(new Node[0]);

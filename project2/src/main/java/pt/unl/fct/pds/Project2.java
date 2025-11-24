@@ -3,6 +3,7 @@ package pt.unl.fct.pds;
 import pt.unl.fct.pds.model.Node;
 import pt.unl.fct.pds.model.Circuit;
 import pt.unl.fct.pds.utils.ConsensusParser;
+import pt.unl.fct.pds.utils.ConsensusCacheManager;
 
 import java.util.Arrays;
 
@@ -15,16 +16,27 @@ public class Project2
 {
     public static void main( String[] args )
     {
-        // Here we write our logic to choose circuits!
         System.out.println("Welcome to the Circuit Simulator!");
 
-        //Ficheiro com o consensus
         String consensusFile = "resources/consensus.txt";
 
-        ConsensusParser parser = new ConsensusParser(consensusFile);
-        Node[] nodes = parser.parseConsensus();
 
-        System.out.println(Arrays.toString(nodes));
+        ConsensusCacheManager cacheManager = new ConsensusCacheManager(
+            consensusFile,
+            "nodes_cache.csv",  
+            true                // Enable cache
+        );
+        Node[] nodes = cacheManager.getNodes();
+        
+        // Uncomment to use original parser without caching
+
+        // ConsensusParser parser = new ConsensusParser(consensusFile);
+        // Node[] nodes = parser.parseConsensus();
+
+        System.out.println("Loaded " + nodes.length + " nodes");
+        System.out.println("First 3 nodes: " + Arrays.toString(Arrays.copyOfRange(nodes, 0, Math.min(3, nodes.length))));
+        
+        
 
 
     }
