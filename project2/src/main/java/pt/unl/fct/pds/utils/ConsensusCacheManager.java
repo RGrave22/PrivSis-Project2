@@ -42,18 +42,16 @@ public class ConsensusCacheManager {
     
     public Node[] getNodes() {
         if (useCache && isCacheValid()) {
-            System.out.println("Loading nodes from cache: " + cacheFile);
+            System.out.println("Loading from cache...");
             try {
                 Node[] cachedNodes = loadFromCache();
-                System.out.println("Successfully loaded " + cachedNodes.length + " nodes from cache");
                 return cachedNodes;
             } catch (Exception e) {
-                System.err.println("Error loading from cache: " + e.getMessage());
-                System.out.println("Falling back to consensus parsing...");
+                System.out.println("⚠ Cache invalid, parsing consensus...");
             }
         }
         
-        System.out.println("Parsing consensus file and creating cache progressively: " + consensusFile);
+        System.out.println("Parsing consensus (this may take a while)...");
         Node[] nodes = parseAndCacheProgressively();
         
         return nodes;
@@ -75,23 +73,25 @@ public class ConsensusCacheManager {
             csvWriter.newLine();
             csvWriter.flush();
             
-            System.out.println("CSV cache file created: " + cacheFile);
-            System.out.println("Parsing consensus and saving nodes progressively...");
-            
             BufferedWriter finalWriter = csvWriter;
+            int[] counter = {0};
+            
             Node[] parsedNodes = parser.parseConsensusWithCallback(node -> {
                 try {
                     finalWriter.write(nodeToCSVRow(node));
                     finalWriter.newLine();
-                    finalWriter.flush(); 
+                    finalWriter.flush();
                     
-                    System.out.println("✓ Saved to cache: " + node.getNickname() + " (" + node.getCountry() + ")");
+                    counter[0]++;
+                    if (counter[0] % 100 == 0) {
+                        System.out.print("\r✓ Cached " + counter[0] + " nodes...");
+                    }
                 } catch (IOException e) {
-                    System.err.println("Warning: Failed to write node to cache: " + e.getMessage());
+                    System.err.println("Error writing to cache: " + e.getMessage());
                 }
             });
             
-            System.out.println("\nSuccessfully parsed and cached " + parsedNodes.length + " nodes");
+            System.out.println("\r✓ Cached " + parsedNodes.length + " nodes          ");
             return parsedNodes;
             
         } catch (IOException e) {

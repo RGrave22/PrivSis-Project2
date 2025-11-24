@@ -61,7 +61,6 @@ public class ConsensusParser {
                     case "r":
 
                         if(currentNode != null){
-                            System.out.println("Adding new node: " + currentNode.toString());
                             nodes.add(currentNode);
                             if(callback != null) {
                                 callback.onNodeParsed(currentNode);
@@ -135,9 +134,7 @@ public class ConsensusParser {
 
             //da add do ultimo
             if(currentNode != null){
-                System.out.println("Adding new node: " + currentNode.toString());
                 nodes.add(currentNode);
-                // Chamar callback se fornecido
                 if(callback != null) {
                     callback.onNodeParsed(currentNode);
                 }
@@ -168,16 +165,12 @@ public class ConsensusParser {
             HttpResponse<String> resp = client.send(req, HttpResponse.BodyHandlers.ofString());
 
             if (resp.statusCode() != 200) {
-                throw new RuntimeException("HTTP " + resp.statusCode() + ": " + resp.body());
+                return "Unknown";
             }
 
-            System.out.println( "IP: " + ip + " Response: " + resp.body());
-
             JsonNode node = mapper.readTree(resp.body());
-            String country = node.path("countryCode").asText(null);
-
-            System.out.println("Country: " + country);
-
+            String country = node.path("countryCode").asText("Unknown");
+            
             return country;
 
         } catch (Exception e) {
