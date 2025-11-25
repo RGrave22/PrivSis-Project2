@@ -16,6 +16,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Base64;
 import java.util.List;
 import java.net.URI;
 
@@ -177,4 +178,6 @@ public class ConsensusParser {
             return "Unknown";
         }
     }
+
+
 }

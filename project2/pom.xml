@@ -48,6 +48,19 @@
                   <target>11</target>
               </configuration>
           </plugin>
+          <plugin>
+              <groupId>org.codehaus.mojo</groupId>
+              <artifactId>exec-maven-plugin</artifactId>
+              <version>1.6.0</version>
+              <configuration>
+                  <mainClass>pt.unl.fct.pds.Project2</mainClass>
+                  <classpathScope>runtime</classpathScope>
+                  <additionalClasspathElements>
+                      <additionalClasspathElement>${project.basedir}/metrics-lib-2.28.0/generated/dist/*</additionalClasspathElement>
+                      <additionalClasspathElement>${project.basedir}/metrics-lib-2.28.0/lib/*</additionalClasspathElement>
+                  </additionalClasspathElements>
+              </configuration>
+          </plugin>
       </plugins>
   </build>
 
@@ -55,7 +68,7 @@
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
-      <version>3.8.1</version>
+      <version>4.13.2</version>
       <scope>test</scope>
     </dependency>
     <dependency>
@@ -63,5 +76,15 @@
       <artifactId>geoip2</artifactId>
       <version>4.0.0</version>
     </dependency>
-    </dependencies>
+      <dependency>
+          <groupId>org.torproject</groupId>
+          <artifactId>metrics-lib</artifactId>
+          <version>2.28.0</version>
+      </dependency>
+      <dependency>
+          <groupId>org.slf4j</groupId>
+          <artifactId>slf4j-simple</artifactId>
+          <version>2.0.7</version>
+      </dependency>
+  </dependencies>
 </project>

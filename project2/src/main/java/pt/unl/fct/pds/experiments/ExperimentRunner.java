@@ -21,17 +21,17 @@ public class ExperimentRunner {
     }
     
 
-    public CircuitStatistics runStandardTor(int numCircuits) {
+    public CircuitStatistics runStandardTor(int numCircuits, String port) {
         if (!quietMode) {
             System.out.println("\n=== Standard Tor Path Selection ===");
         }
         
         PathSelector selector = new PathSelector(nodes);
-        return runExperiment(selector, numCircuits);
+        return runExperiment(selector, numCircuits, port);
     }
     
 
-    public CircuitStatistics runGeographyAware(double alpha, double beta, int numCircuits) {
+    public CircuitStatistics runGeographyAware(double alpha, double beta, int numCircuits, String port) {
         if (!quietMode) {
             System.out.println("\n=== Geography-Aware Selection ===");
             System.out.printf("Parameters: α=%.2f, β=%.2f\n", alpha, beta);
@@ -39,15 +39,15 @@ public class ExperimentRunner {
         
         PathSelector selector = new PathSelector(nodes);
         selector.setGeographyParameters(alpha, beta);
-        return runExperiment(selector, numCircuits);
+        return runExperiment(selector, numCircuits, port);
     }
     
 
-    private CircuitStatistics runExperiment(PathSelector selector, int numCircuits) {
+    private CircuitStatistics runExperiment(PathSelector selector, int numCircuits, String port) {
         CircuitStatistics stats = new CircuitStatistics();
         
         for (int i = 1; i <= numCircuits; i++) {
-            Node[] path = selector.selectPath();
+            Node[] path = selector.selectPath(port);
             
             if (path != null) {
                 stats.recordCircuit(path);
@@ -65,7 +65,7 @@ public class ExperimentRunner {
     }
     
 
-    public void compareConfigurations(int numCircuits) {
+    public void compareConfigurations(int numCircuits, String port) {
         System.out.println("\n=== Comparing Configurations ===\n");
         
         double[][] configs = {
@@ -86,7 +86,7 @@ public class ExperimentRunner {
             
             CircuitStatistics stats = new CircuitStatistics();
             for (int i = 0; i < numCircuits; i++) {
-                Node[] path = selector.selectPath();
+                Node[] path = selector.selectPath(port);
                 if (path != null) {
                     stats.recordCircuit(path);
                 }

@@ -3,6 +3,7 @@ package pt.unl.fct.pds.utils;
 import pt.unl.fct.pds.model.Node;
 
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.List;
 import java.util.Random;
 
@@ -18,12 +19,7 @@ public class PathSelector {
         this.allNodes = nodes;
         this.random = new Random();
     }
-    
-    public PathSelector(Node[] nodes, long seed) {
-        this.allNodes = nodes;
-        this.random = new Random(seed);
-    }
-    
+
 
     public void setGeographyParameters(double alpha, double beta) {
         this.alpha = alpha;
@@ -31,8 +27,8 @@ public class PathSelector {
     }
     
 
-    public Node[] selectPath() {
-        Node exit = selectExit();
+    public Node[] selectPath(String port) {
+        Node exit = selectExit(port);
         if (exit == null) return null;
         
         Node guard = selectGuard(exit);
@@ -45,11 +41,11 @@ public class PathSelector {
     }
     
 
-    private Node selectExit() {
+    private Node selectExit(String port) {
         List<Node> candidates = new ArrayList<>();
         
         for (Node node : allNodes) {
-            if (hasFlag(node, "Fast") && hasSuitableExitPolicy(node)) {
+            if (hasFlag(node, "Fast") && hasSuitableExitPolicy(node, port)) {
                 candidates.add(node);
             }
         }
@@ -163,24 +159,80 @@ public class PathSelector {
         return false;
     }
     
+    //TODO ACHO QUE TEM QUE SER MUDADO
+//    private boolean hasSuitableExitPolicy(Node node, String port) {
+//        String policy = node.getExitPolicy();
+//        if (policy == null || policy.isEmpty()) return false;
+//
+//        return policy.toLowerCase().contains("accept") ||
+//               !policy.toLowerCase().contains("reject *:*");
+//    }
 
-    private boolean hasSuitableExitPolicy(Node node) {
+    private boolean hasSuitableExitPolicy(Node node, String port) {
         String policy = node.getExitPolicy();
         if (policy == null || policy.isEmpty()) return false;
-        
-       
-        return policy.toLowerCase().contains("accept") || 
-               !policy.toLowerCase().contains("reject *:*");
+
+        policy = policy.toLowerCase();
+        if (policy.contains("reject 1-65535")) {
+            // se a policy rejeita tudo retorna false
+            return false;
+        }
+
+        boolean isAccept = policy.contains("accept");
+        if (!isAccept) return false; // se apenas tem reject
+
+        String[] splitPolicy = policy.split(" ");
+        String[] ports = splitPolicy[1].split(",");
+
+        for (String p : ports) {
+            p = p.trim();
+            if (p.isEmpty()) continue;
+            if (p.contains("-")) {
+
+                String[] parts = p.split("-");
+                if (parts.length == 2) {
+                    try {
+                        int min = Integer.parseInt(parts[0]);
+                        int max = Integer.parseInt(parts[1]);
+
+                        if (Integer.parseInt(port) >= min && Integer.parseInt(port) <= max) return true;
+                    } catch (NumberFormatException ignore) {}
+                }
+            } else {
+                try {
+                    if (Integer.parseInt(p) == Integer.parseInt(port)) return true;
+                } catch (NumberFormatException ignore) {}
+            }
+        }
+        return false;
+
+
     }
-    
-    
+
+
+
+    //TODO Esta bem?
     private boolean isSameFamily(Node node1, Node node2) {
         if (node1 == null || node2 == null) return false;
-        
-       
-        return node1.getFingerprint().equals(node2.getFingerprint());
+
+        String node2HexFingerprint = "$" + base64ToHex(node2.getFingerprint()).toUpperCase();
+
+        String familyStr = node1.getFamily();
+
+        boolean result = familyStr != null && familyStr.contains(node2HexFingerprint);
+//        System.out.println("isSameFamily result: " + result);
+
+        return result;
     }
-    
+
+    public static String base64ToHex(String base64) {
+        byte[] bytes = Base64.getDecoder().decode(base64);
+        StringBuilder hex = new StringBuilder();
+        for (byte b : bytes) {
+            hex.append(String.format("%02X", b));
+        }
+        return hex.toString();
+    }
 
     private boolean isSameSubnet(Node node1, Node node2) {
         if (node1 == null || node2 == null) return false;
