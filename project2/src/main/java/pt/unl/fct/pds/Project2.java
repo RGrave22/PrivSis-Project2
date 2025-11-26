@@ -44,8 +44,7 @@ public class Project2
 
         ExperimentRunner runner = new ExperimentRunner(nodes);
 
-
-        // Quick demo mode (3 circuits each)
+        
         System.out.println("=== Quick Demo ===");
         System.out.println("Low = Low Risk Path Selection");
         System.out.println("Medium = Medium Risk Path Selection");
