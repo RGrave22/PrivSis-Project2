@@ -61,11 +61,12 @@ public class ExperimentRunner {
         CircuitStatistics stats = new CircuitStatistics();
 
         for (int i = 1; i <= numCircuits; i++) {
+            System.out.println("\n--- Geo Circuit " + i + " ---");
             Node[] path = selector.selectPath(port);
 
             if (path != null) {
                 stats.recordCircuit(path);
-                if (!quietMode && i <= 3) {
+                if (!quietMode && i <= numCircuits) {
                     CircuitDisplay.printCircuit(path, i);
                 }
             }

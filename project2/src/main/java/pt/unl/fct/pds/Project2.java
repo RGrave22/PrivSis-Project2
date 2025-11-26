@@ -17,6 +17,7 @@ public class Project2
     public static void main(String[] args) throws Exception {
         String portToUse = "443";
         int numCircuitsForSimpleTor = 100;
+        int numCircuitsForGeoAware = 100;
 
         System.out.println("=== Tor Circuit Simulator ===\n");
 
@@ -53,12 +54,12 @@ public class Project2
 
         runner.runStandardTor(numCircuitsForSimpleTor, portToUse);
 
-        runner.runGeographyAware(0.5, 0.5, 3, portToUse);
+        runner.runGeographyAware(0.5, 0.5, numCircuitsForGeoAware, portToUse);
         
         // Comparison mode (100 circuits each)
         System.out.println("\n=== Performance Comparison ===");
-        runner.setQuietMode(true);
-        runner.compareConfigurations(100, portToUse);
+        //runner.setQuietMode(true);
+        //runner.compareConfigurations(100, portToUse);
         
         System.out.println("\n=== Complete ===");
     }

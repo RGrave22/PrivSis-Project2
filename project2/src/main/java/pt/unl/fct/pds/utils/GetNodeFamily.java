@@ -34,7 +34,7 @@ public class GetNodeFamily {
 //                System.out.println("fp normalized: " + normalizedFp);
                 Node node = fingerprintToNode.get(normalizedFp);
                 if (node != null) {
-                    System.out.println("Node != null...");
+//                    System.out.println("Node != null...");
                     List<String> familyEntries = relayDesc.getFamilyEntries();
                     System.out.println(familyEntries);
                     node.setFamily(familyEntries != null ? familyEntries.toString() : "[]");
