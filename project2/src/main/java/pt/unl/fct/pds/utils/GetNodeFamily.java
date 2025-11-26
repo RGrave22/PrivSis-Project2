@@ -27,9 +27,11 @@ public class GetNodeFamily {
             if (desc instanceof RelayServerDescriptor) {
                 RelayServerDescriptor relayDesc = (RelayServerDescriptor) desc;
                 String fp = relayDesc.getFingerprint();
-                System.out.println("fp normal: " + fp);
+
+//                System.out.println("fp normal: " + fp);
+
                 String normalizedFp = fp.toUpperCase().replace(" ", "");
-                System.out.println("fp normalized: " + normalizedFp);
+//                System.out.println("fp normalized: " + normalizedFp);
                 Node node = fingerprintToNode.get(normalizedFp);
                 if (node != null) {
                     System.out.println("Node != null...");

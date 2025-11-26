@@ -106,8 +106,7 @@ public class ConsensusCacheManager {
             }
         }
     }
-    
-    
+
     private boolean isCacheValid() {
         Path cachePath = Paths.get(cacheFile);
         

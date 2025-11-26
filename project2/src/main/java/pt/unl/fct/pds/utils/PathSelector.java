@@ -20,12 +20,10 @@ public class PathSelector {
         this.random = new Random();
     }
 
-
     public void setGeographyParameters(double alpha, double beta) {
         this.alpha = alpha;
         this.beta = beta;
     }
-    
 
     public Node[] selectPath(String port) {
         Node exit = selectExit(port);
@@ -45,7 +43,7 @@ public class PathSelector {
         List<Node> candidates = new ArrayList<>();
         
         for (Node node : allNodes) {
-            if (hasFlag(node, "Fast") && hasSuitableExitPolicy(node, port)) {
+            if (Utils.hasFlag(node, "Fast") && Utils.hasSuitableExitPolicy(node, port)) {
                 candidates.add(node);
             }
         }
@@ -58,14 +56,12 @@ public class PathSelector {
         List<Node> candidates = new ArrayList<>();
         
         for (Node node : allNodes) {
-            if (hasFlag(node, "Guard") && 
-                !isSameFamily(node, exit) && 
-                !isSameSubnet(node, exit)) {
+            if (Utils.hasFlag(node, "Guard") &&
+                !Utils.isSameFamily(node, exit) &&
+                !Utils.isSameSubnet(node, exit)) {
                 candidates.add(node);
             }
         }
-        
-        if (candidates.isEmpty()) return null;
         
         List<String> selectedCountries = new ArrayList<>();
         selectedCountries.add(exit.getCountry());
@@ -78,11 +74,11 @@ public class PathSelector {
         List<Node> candidates = new ArrayList<>();
         
         for (Node node : allNodes) {
-            if (hasFlag(node, "Fast") &&
-                !isSameFamily(node, guard) &&
-                !isSameFamily(node, exit) &&
-                !isSameSubnet(node, guard) &&
-                !isSameSubnet(node, exit) &&
+            if (Utils.hasFlag(node, "Fast") &&
+                !Utils.isSameFamily(node, guard) &&
+                !Utils.isSameFamily(node, exit) &&
+                !Utils.isSameSubnet(node, guard) &&
+                !Utils.isSameSubnet(node, exit) &&
                 !node.equals(guard) &&
                 !node.equals(exit)) {
                 candidates.add(node);
@@ -151,103 +147,6 @@ public class PathSelector {
     }
     
 
-    private boolean hasFlag(Node node, String flag) {
-        if (node.getFlags() == null) return false;
-        for (String f : node.getFlags()) {
-            if (f.equals(flag)) return true;
-        }
-        return false;
-    }
-    
-    //TODO ACHO QUE TEM QUE SER MUDADO
-//    private boolean hasSuitableExitPolicy(Node node, String port) {
-//        String policy = node.getExitPolicy();
-//        if (policy == null || policy.isEmpty()) return false;
-//
-//        return policy.toLowerCase().contains("accept") ||
-//               !policy.toLowerCase().contains("reject *:*");
-//    }
-
-    private boolean hasSuitableExitPolicy(Node node, String port) {
-        String policy = node.getExitPolicy();
-        if (policy == null || policy.isEmpty()) return false;
-
-        policy = policy.toLowerCase();
-        if (policy.contains("reject 1-65535")) {
-            // se a policy rejeita tudo retorna false
-            return false;
-        }
-
-        boolean isAccept = policy.contains("accept");
-        if (!isAccept) return false; // se apenas tem reject
-
-        String[] splitPolicy = policy.split(" ");
-        String[] ports = splitPolicy[1].split(",");
-
-        for (String p : ports) {
-            p = p.trim();
-            if (p.isEmpty()) continue;
-            if (p.contains("-")) {
-
-                String[] parts = p.split("-");
-                if (parts.length == 2) {
-                    try {
-                        int min = Integer.parseInt(parts[0]);
-                        int max = Integer.parseInt(parts[1]);
-
-                        if (Integer.parseInt(port) >= min && Integer.parseInt(port) <= max) return true;
-                    } catch (NumberFormatException ignore) {}
-                }
-            } else {
-                try {
-                    if (Integer.parseInt(p) == Integer.parseInt(port)) return true;
-                } catch (NumberFormatException ignore) {}
-            }
-        }
-        return false;
 
 
-    }
-
-
-
-    //TODO Esta bem?
-    private boolean isSameFamily(Node node1, Node node2) {
-        if (node1 == null || node2 == null) return false;
-
-        String node2HexFingerprint = "$" + base64ToHex(node2.getFingerprint()).toUpperCase();
-
-        String familyStr = node1.getFamily();
-
-        boolean result = familyStr != null && familyStr.contains(node2HexFingerprint);
-//        System.out.println("isSameFamily result: " + result);
-
-        return result;
-    }
-
-    public static String base64ToHex(String base64) {
-        byte[] bytes = Base64.getDecoder().decode(base64);
-        StringBuilder hex = new StringBuilder();
-        for (byte b : bytes) {
-            hex.append(String.format("%02X", b));
-        }
-        return hex.toString();
-    }
-
-    private boolean isSameSubnet(Node node1, Node node2) {
-        if (node1 == null || node2 == null) return false;
-        
-        String ip1 = node1.getIpAddress();
-        String ip2 = node2.getIpAddress();
-        
-        if (ip1 == null || ip2 == null) return false;
-        
-        // Extract /16 subnet 
-        String[] parts1 = ip1.split("\\.");
-        String[] parts2 = ip2.split("\\.");
-        
-        if (parts1.length < 2 || parts2.length < 2) return false;
-        
-        return parts1[0].equals(parts2[0]) && parts1[1].equals(parts2[1]);
-    }
 }

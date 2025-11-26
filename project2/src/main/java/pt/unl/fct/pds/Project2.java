@@ -16,6 +16,7 @@ public class Project2
 {
     public static void main(String[] args) throws Exception {
         String portToUse = "443";
+        int numCircuitsForSimpleTor = 100;
 
         System.out.println("=== Tor Circuit Simulator ===\n");
 
@@ -23,9 +24,9 @@ public class Project2
         descriptorCollector.collectDescriptors(
                 "https://collector.torproject.org",
                 new String[] { "/recent/relay-descriptors/server-descriptors/" },
-                0L,  // baixa todos os arquivos independentemente do tempo modificado
-                new File("descriptors"),  // diretório local para salvar os arquivos
-                false  // não apaga arquivos locais que não existem mais remoto
+                0L,
+                new File("descriptors"),
+                false
         );
         System.out.println("Download concluído.");
 
@@ -36,9 +37,9 @@ public class Project2
         File consensus = new File("resources/consensus.txt");
         GetNodeFamily.updateFamilies(nodes);
 
-        for(Node n : nodes) {
-            System.out.println(n.toString());
-        }
+//        for(Node n : nodes) {
+//            System.out.println(n.toString());
+//        }
 
         ExperimentRunner runner = new ExperimentRunner(nodes);
 
@@ -49,7 +50,9 @@ public class Project2
         System.out.println("Medium = Medium Risk Path Selection");
         System.out.println("High = High Risk Path Selection");
 
-        runner.runStandardTor(3, portToUse);
+
+        runner.runStandardTor(numCircuitsForSimpleTor, portToUse);
+
         runner.runGeographyAware(0.5, 0.5, 3, portToUse);
         
         // Comparison mode (100 circuits each)

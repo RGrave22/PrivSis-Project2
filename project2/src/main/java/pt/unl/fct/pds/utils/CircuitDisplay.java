@@ -18,7 +18,7 @@ public class CircuitDisplay {
         }
         
         if (verboseMode) {
-            System.out.println("\n--- Circuit " + circuitNumber + " ---");
+
             System.out.println("Guard:  " + formatNode(path[0]));
             System.out.println("Middle: " + formatNode(path[1]));
             System.out.println("Exit:   " + formatNode(path[2]));

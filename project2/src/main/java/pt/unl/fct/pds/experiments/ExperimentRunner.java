@@ -4,6 +4,7 @@ import pt.unl.fct.pds.model.Node;
 import pt.unl.fct.pds.utils.PathSelector;
 import pt.unl.fct.pds.utils.CircuitStatistics;
 import pt.unl.fct.pds.utils.CircuitDisplay;
+import pt.unl.fct.pds.utils.SimpleTorPathSelector;
 
 
 public class ExperimentRunner {
@@ -26,8 +27,27 @@ public class ExperimentRunner {
             System.out.println("\n=== Standard Tor Path Selection ===");
         }
         
-        PathSelector selector = new PathSelector(nodes);
-        return runExperiment(selector, numCircuits, port);
+        SimpleTorPathSelector selector = new SimpleTorPathSelector(nodes);
+
+        CircuitStatistics stats = new CircuitStatistics();
+
+        for (int i = 1; i <= numCircuits; i++) {
+            System.out.println("\n--- Circuit " + i + " ---");
+            Node[] path = selector.selectPath(port);
+
+            if (path != null) {
+                stats.recordCircuit(path);
+                if (!quietMode && i <= numCircuits) {
+                    CircuitDisplay.printCircuit(path, i);
+                }
+            }
+        }
+
+        if (!quietMode) {
+            stats.printSummary();
+        }
+
+        return stats;
     }
     
 
@@ -39,16 +59,11 @@ public class ExperimentRunner {
         
         PathSelector selector = new PathSelector(nodes);
         selector.setGeographyParameters(alpha, beta);
-        return runExperiment(selector, numCircuits, port);
-    }
-    
-
-    private CircuitStatistics runExperiment(PathSelector selector, int numCircuits, String port) {
         CircuitStatistics stats = new CircuitStatistics();
-        
+
         for (int i = 1; i <= numCircuits; i++) {
             Node[] path = selector.selectPath(port);
-            
+
             if (path != null) {
                 stats.recordCircuit(path);
                 if (!quietMode && i <= 3) {
@@ -56,11 +71,11 @@ public class ExperimentRunner {
                 }
             }
         }
-        
+
         if (!quietMode) {
             stats.printSummary();
         }
-        
+
         return stats;
     }
     
