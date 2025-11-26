@@ -1,10 +1,10 @@
 package pt.unl.fct.pds.experiments;
 
 import pt.unl.fct.pds.model.Node;
-import pt.unl.fct.pds.utils.PathSelector;
 import pt.unl.fct.pds.utils.CircuitStatistics;
 import pt.unl.fct.pds.utils.CircuitDisplay;
 import pt.unl.fct.pds.utils.SimpleTorPathSelector;
+import pt.unl.fct.pds.utils.GeographicallyAwarePathSelector;
 
 
 public class ExperimentRunner {
@@ -57,8 +57,7 @@ public class ExperimentRunner {
             System.out.printf("Parameters: α=%.2f, β=%.2f\n", alpha, beta);
         }
         
-        PathSelector selector = new PathSelector(nodes);
-        selector.setGeographyParameters(alpha, beta);
+        GeographicallyAwarePathSelector selector = new GeographicallyAwarePathSelector(nodes, alpha, beta);
         CircuitStatistics stats = new CircuitStatistics();
 
         for (int i = 1; i <= numCircuits; i++) {
@@ -96,8 +95,7 @@ public class ExperimentRunner {
             double alpha = config[0];
             double beta = config[1];
             
-            PathSelector selector = new PathSelector(nodes);
-            selector.setGeographyParameters(alpha, beta);
+            GeographicallyAwarePathSelector selector = new GeographicallyAwarePathSelector(nodes, alpha, beta);
             
             CircuitStatistics stats = new CircuitStatistics();
             for (int i = 0; i < numCircuits; i++) {
