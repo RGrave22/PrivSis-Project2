@@ -6,111 +6,116 @@ import pt.unl.fct.pds.utils.CircuitDisplay;
 import pt.unl.fct.pds.utils.SimpleTorPathSelector;
 import pt.unl.fct.pds.utils.GeographicallyAwarePathSelector;
 
-
 public class ExperimentRunner {
-    
+
     private final Node[] nodes;
-    private boolean quietMode = false;
-    
+
+    public CircuitStatistics simpleStats;
+    public CircuitStatistics geoStats;
+
     public ExperimentRunner(Node[] nodes) {
         this.nodes = nodes;
+        simpleStats = new CircuitStatistics();
+        geoStats = new CircuitStatistics();
     }
-    
-    public void setQuietMode(boolean quiet) {
-        this.quietMode = quiet;
-        CircuitDisplay.setVerboseMode(!quiet);
-    }
-    
 
     public CircuitStatistics runStandardTor(int numCircuits, String port) {
-        if (!quietMode) {
-            System.out.println("\n=== Standard Tor Path Selection ===");
-        }
-        
+        System.out.println("\n=== Standard Tor Path Selection ===");
+
         SimpleTorPathSelector selector = new SimpleTorPathSelector(nodes);
 
-        CircuitStatistics stats = new CircuitStatistics();
 
         for (int i = 1; i <= numCircuits; i++) {
             System.out.println("\n--- Circuit " + i + " ---");
             Node[] path = selector.selectPath(port);
 
             if (path != null) {
-                stats.recordCircuit(path);
-                if (!quietMode && i <= numCircuits) {
-                    CircuitDisplay.printCircuit(path, i);
-                }
+                simpleStats.recordCircuit(path);
+                CircuitDisplay.printCircuit(path, i);
             }
         }
 
-        if (!quietMode) {
-            stats.printSummary();
-        }
+        simpleStats.exportBandwidthsToCsv(true);
 
-        return stats;
+        return simpleStats;
     }
-    
+
 
     public CircuitStatistics runGeographyAware(double alpha, double beta, int numCircuits, String port) {
-        if (!quietMode) {
-            System.out.println("\n=== Geography-Aware Selection ===");
-            System.out.printf("Parameters: α=%.2f, β=%.2f\n", alpha, beta);
-        }
-        
+        System.out.println("\n=== Geography-Aware Selection ===");
+        System.out.printf("Parameters: α=%.2f, β=%.2f\n", alpha, beta);
+
         GeographicallyAwarePathSelector selector = new GeographicallyAwarePathSelector(nodes, alpha, beta);
-        CircuitStatistics stats = new CircuitStatistics();
 
         for (int i = 1; i <= numCircuits; i++) {
             System.out.println("\n--- Geo Circuit " + i + " ---");
             Node[] path = selector.selectPath(port);
 
             if (path != null) {
-                stats.recordCircuit(path);
-                if (!quietMode && i <= numCircuits) {
-                    CircuitDisplay.printCircuit(path, i);
-                }
+                geoStats.recordCircuit(path);
+                CircuitDisplay.printCircuit(path, i);
             }
         }
 
-        if (!quietMode) {
-            stats.printSummary();
+        geoStats.exportBandwidthsToCsv(false);
+
+        return geoStats;
+    }
+
+
+    public void compareStats() {
+        if (simpleStats == null || geoStats == null) {
+            System.out.println("Run both StandardTor and GeographyAware before comparing.");
+            return;
         }
 
-        return stats;
-    }
-    
+        System.out.println();
+        System.out.println();
+        System.out.println("=== SIMPLE TOR SUMMARY ===");
+        simpleStats.printSummary();
 
-    public void compareConfigurations(int numCircuits, String port) {
-        System.out.println("\n=== Comparing Configurations ===\n");
-        
-        double[][] configs = {
-            {0.0, 0.0},  // Standard
-            {0.3, 0.3},  // Light
-            {0.5, 0.5},  // Medium
-            {0.7, 0.7},  // Strong
-        };
-        
-        System.out.println("Running " + numCircuits + " circuits per configuration...\n");
-        
-        for (double[] config : configs) {
-            double alpha = config[0];
-            double beta = config[1];
-            
-            GeographicallyAwarePathSelector selector = new GeographicallyAwarePathSelector(nodes, alpha, beta);
-            
-            CircuitStatistics stats = new CircuitStatistics();
-            for (int i = 0; i < numCircuits; i++) {
-                Node[] path = selector.selectPath(port);
-                if (path != null) {
-                    stats.recordCircuit(path);
-                }
-            }
-            
-            System.out.printf("α=%.1f, β=%.1f: ", alpha, beta);
-            System.out.printf("3-country=%.1f%%, Avg BW=%d\n",
-                100.0 * stats.getCircuits3Countries() / stats.getTotalCircuits(),
-                stats.getAverageBandwidth()
-            );
-        }
+        System.out.println();
+        System.out.println("=== GEO AWARE SUMMARY ===");
+        geoStats.printSummary();
+
+
+        System.out.println("\n=== COMPARING SIMPLE TOR vs GEO-AWARE ===");
+
+        System.out.println("\n[General]");
+        System.out.printf("Total circuits (simple): %d%n", simpleStats.getTotalCircuits());
+        System.out.printf("Total circuits (geo):    %d%n", geoStats.getTotalCircuits());
+
+        System.out.println("\n[Metric 1] Node set cardinality");
+        System.out.printf("Global  - simple: %d | geo: %d%n",
+                simpleStats.getUniqueNodesGlobal(), geoStats.getUniqueNodesGlobal());
+        System.out.printf("Guards  - simple: %d | geo: %d%n",
+                simpleStats.getUniqueGuards(), geoStats.getUniqueGuards());
+        System.out.printf("Middles - simple: %d | geo: %d%n",
+                simpleStats.getUniqueMiddles(), geoStats.getUniqueMiddles());
+        System.out.printf("Exits   - simple: %d | geo: %d%n",
+                simpleStats.getUniqueExits(), geoStats.getUniqueExits());
+
+        System.out.println("\n[Metric 2] Shannon entropy H(X) over countries");
+        System.out.printf("Global  - simple: %.4f | geo: %.4f%n",
+                simpleStats.getGlobalCountryEntropy(), geoStats.getGlobalCountryEntropy());
+        System.out.printf("Guards  - simple: %.4f | geo: %.4f%n",
+                simpleStats.getGuardCountryEntropy(), geoStats.getGuardCountryEntropy());
+        System.out.printf("Middles - simple: %.4f | geo: %.4f%n",
+                simpleStats.getMiddleCountryEntropy(), geoStats.getMiddleCountryEntropy());
+        System.out.printf("Exits   - simple: %.4f | geo: %.4f%n",
+                simpleStats.getExitCountryEntropy(), geoStats.getExitCountryEntropy());
+
+        System.out.println("\n[Metric 3] Circuit bandwidth (min node bandwidth)");
+        System.out.printf("Average - simple: %.2f KB/s | geo: %.2f KB/s%n",
+                simpleStats.getAverageBandwidth(), geoStats.getAverageBandwidth());
+        System.out.printf("Min     - simple: %d KB/s   | geo: %d KB/s%n",
+                simpleStats.getMinBandwidth(), geoStats.getMinBandwidth());
+        System.out.printf("Max     - simple: %d KB/s   | geo: %d KB/s%n",
+                simpleStats.getMaxBandwidth(), geoStats.getMaxBandwidth());
+        System.out.println();
+
+
     }
+
 }
+

@@ -28,14 +28,14 @@ public class GeographicallyAwarePathSelector {
     }
 
     public Node[] selectPath(String port) {
-        System.out.println("[Sampled Guards]");
-        for(Node node : sampledGuards.keySet()) {
-            System.out.println("Node: " + node.getNickname() + " uses: " + sampledGuards.get(node));
-        }
-        System.out.println("[Confirmed Guards]");
-        for(Node node : confirmedGuards.keySet()) {
-            System.out.println("Node: " + node.getNickname() + " uses: " + confirmedGuards.get(node));
-        }
+//        System.out.println("[Sampled Guards]");
+//        for(Node node : sampledGuards.keySet()) {
+//            System.out.println("Node: " + node.getNickname() + " uses: " + sampledGuards.get(node));
+//        }
+//        System.out.println("[Confirmed Guards]");
+//        for(Node node : confirmedGuards.keySet()) {
+//            System.out.println("Node: " + node.getNickname() + " uses: " + confirmedGuards.get(node));
+//        }
 
         Node exit = selectExit(port);
         if (exit == null) return null;
@@ -45,15 +45,15 @@ public class GeographicallyAwarePathSelector {
 
         Node middle = selectMiddle(guard, exit);
         if (middle == null) return null;
-
-        if(!removedNodes.contains(guard)) {
-            updateSampledGuards(guard);
-        }
-        removedNodes.remove(guard);
-
-        for(Node node : removedNodes) {
-            System.out.println("[Removed Guards]: " + node.getNickname());
-        }
+//Descomentar para usar Confirmed and Sampled
+//        if(!removedNodes.contains(guard)) {
+//            updateSampledGuards(guard);
+//        }
+//        removedNodes.remove(guard);
+//
+//        for(Node node : removedNodes) {
+//            System.out.println("[Removed Guards]: " + node.getNickname());
+//        }
 
         return new Node[]{guard, middle, exit};
     }
@@ -82,34 +82,34 @@ public class GeographicallyAwarePathSelector {
             }
         }
 
-
-        List<Node> confirmedCandidates = Utils.filterGuardsInList(candidates, confirmedGuards);
-        confirmedCandidates.removeIf(guard -> confirmedGuards.getOrDefault(guard, 0) >= MAX_CONFIRMED_USES);
-
-        if (!confirmedCandidates.isEmpty()) {
-            Node chosen = weightedRandomSelectByBandwidthGuard(confirmedCandidates, exit);
-            confirmedGuards.put(chosen, confirmedGuards.getOrDefault(chosen, 0) + 1);
-
-            if (confirmedGuards.get(chosen) >= MAX_CONFIRMED_USES) {
-                System.out.println("Got Max uses, deleting:  " + chosen);
-                confirmedGuards.remove(chosen);
-                removedNodes.add(chosen);
-            }
-
-            System.out.println("[Confirmed]: " + chosen);
-            return chosen;
-        }
-
-        List<Node> sampledCandidates = Utils.filterGuardsInList(candidates, sampledGuards);
-        if (!sampledCandidates.isEmpty()) {
-            Node chosen = weightedRandomSelectByBandwidthGuard(sampledCandidates, exit);
-
-            System.out.println("[Sampled]: " + chosen);
-
-            return chosen;
-        }
-
-        System.out.println("[No confirmed nor sampled]");
+        //Descomentar para usar Confirmed and Sampled
+//        List<Node> confirmedCandidates = Utils.filterGuardsInList(candidates, confirmedGuards);
+//        confirmedCandidates.removeIf(guard -> confirmedGuards.getOrDefault(guard, 0) >= MAX_CONFIRMED_USES);
+//
+//        if (!confirmedCandidates.isEmpty()) {
+//            Node chosen = weightedRandomSelectByBandwidthGuard(confirmedCandidates, exit);
+//            confirmedGuards.put(chosen, confirmedGuards.getOrDefault(chosen, 0) + 1);
+//
+//            if (confirmedGuards.get(chosen) >= MAX_CONFIRMED_USES) {
+//                System.out.println("Got Max uses, deleting:  " + chosen);
+//                confirmedGuards.remove(chosen);
+//                removedNodes.add(chosen);
+//            }
+//
+//            System.out.println("[Confirmed]: " + chosen);
+//            return chosen;
+//        }
+//
+//        List<Node> sampledCandidates = Utils.filterGuardsInList(candidates, sampledGuards);
+//        if (!sampledCandidates.isEmpty()) {
+//            Node chosen = weightedRandomSelectByBandwidthGuard(sampledCandidates, exit);
+//
+//            System.out.println("[Sampled]: " + chosen);
+//
+//            return chosen;
+//        }
+//
+//        System.out.println("[No confirmed nor sampled]");
         return weightedRandomSelectByBandwidthGuard(candidates, exit);
     }
 
@@ -143,16 +143,16 @@ public class GeographicallyAwarePathSelector {
 
         for (int i = 0; i < candidates.size(); i++) {
             Node node = candidates.get(i);
-            double weight = node.getBandwidth();
+            weights[i] = node.getBandwidth();
 
             if (alpha != 0.0 && exitCountry != null && node.getCountry() != null) {
                 if (!node.getCountry().equalsIgnoreCase(exitCountry)) {
-                    weight *= (1.0 + alpha);
+                    weights[i] *= (1.0 + alpha);
                 }
             }
 
-            weights[i] = weight;
-            totalWeight += weight;
+            //weights[i] = weight;
+            totalWeight += weights[i];
         }
 
         if (totalWeight == 0) {
@@ -200,7 +200,7 @@ public class GeographicallyAwarePathSelector {
 
         for (int i = 0; i < candidates.size(); i++) {
             Node node = candidates.get(i);
-            double weight = node.getBandwidth();
+            weights[i] = node.getBandwidth();
 
             String nodeCountry = node.getCountry();
             String guardCountry = guard.getCountry();
@@ -210,6 +210,7 @@ public class GeographicallyAwarePathSelector {
             if (nodeCountry != null && guardCountry != null && exitCountry != null) {
                 boolean diffGuard = !nodeCountry.equalsIgnoreCase(guardCountry);
                 boolean diffExit = !nodeCountry.equalsIgnoreCase(exitCountry);
+                //(boolean diffExitGuard = !guardCountry.equalsIgnoreCase(exitCountry);
 
                 if (diffGuard && diffExit) {
                     c = 3;
@@ -220,7 +221,7 @@ public class GeographicallyAwarePathSelector {
                 }
             }
 
-            weights[i] = weight * (1 + (beta * c));
+            weights[i] *= (1 + (beta * c));
             totalWeight += weights[i];
         }
 

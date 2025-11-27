@@ -16,6 +16,9 @@ public class Project2
 {
     public static void main(String[] args) throws Exception {
         String portToUse = "443";
+        double alpha = 0.8;
+        double beta = 0.5;
+
         int numCircuitsForSimpleTor = 100;
         int numCircuitsForGeoAware = 100;
 
@@ -29,9 +32,9 @@ public class Project2
                 new File("descriptors"),
                 false
         );
-        System.out.println("Download concluído.");
+        System.out.println("Descriptors Download concluded.");
 
-        // Load nodes from cache or consensus
+        // Load nodes from cache or consensus -> to make avoid waiting too much on testing
         Node[] nodes = loadNodes();
         System.out.println("Loaded " + nodes.length + " nodes\n");
 
@@ -53,12 +56,10 @@ public class Project2
 
         runner.runStandardTor(numCircuitsForSimpleTor, portToUse);
 
-        runner.runGeographyAware(0.5, 0.5, numCircuitsForGeoAware, portToUse);
+        runner.runGeographyAware(alpha, beta, numCircuitsForGeoAware, portToUse);
         
-        // Comparison mode (100 circuits each)
-        System.out.println("\n=== Performance Comparison ===");
-        //runner.setQuietMode(true);
-        //runner.compareConfigurations(100, portToUse);
+        runner.compareStats();
+
         
         System.out.println("\n=== Complete ===");
     }

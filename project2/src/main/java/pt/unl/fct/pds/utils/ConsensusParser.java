@@ -3,12 +3,16 @@ package pt.unl.fct.pds.utils;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import pt.unl.fct.pds.model.Node;
-import org.torproject.descriptor.*;
+import com.maxmind.geoip2.DatabaseReader;
+import com.maxmind.geoip2.model.CountryResponse;
+import com.maxmind.geoip2.exception.GeoIp2Exception;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.net.InetAddress;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
@@ -16,18 +20,31 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Base64;
 import java.util.List;
 import java.net.URI;
 
 public class ConsensusParser {
     String filename;
 
+    private DatabaseReader geoReader;
+
     private static final HttpClient client = HttpClient.newHttpClient();
     private static final ObjectMapper mapper = new ObjectMapper();
 
     public ConsensusParser() {}
-    public ConsensusParser(String filename) {this.filename = filename;}
+
+    public ConsensusParser(String filename) {
+        this.filename = filename;
+
+        try {
+            File database = new File("GeoLite2-Country.mmdb");
+            this.geoReader = new DatabaseReader.Builder(database).build();
+            System.out.println("GeoIP database loaded successfully!");
+        } catch (IOException e) {
+            System.err.println("GeoIP database not found");
+            this.geoReader = null;
+        }
+    }
 
     public String getFilename() {return filename;}
     public void setFilename(String filename) {this.filename = filename;}
@@ -40,7 +57,7 @@ public class ConsensusParser {
     public Node[] parseConsensus() {
         return parseConsensusWithCallback(null);
     }
-    
+
     public Node[] parseConsensusWithCallback(NodeCallback callback) {
         List<Node> nodes = new ArrayList<Node>();
 
@@ -52,7 +69,6 @@ public class ConsensusParser {
 
             while((line = br.readLine()) != null) {
                 String[] split = line.split(" ");
-
 
                 if(split.length == 0){
                     continue;
@@ -125,12 +141,8 @@ public class ConsensusParser {
                         break;
 
                     default:
-
                         break;
                 }
-
-
-
             }
 
             //da add do ultimo
@@ -148,13 +160,27 @@ public class ConsensusParser {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-
-
     }
 
     public String getCountryFromIP(String ip) {
-        try {
+        // Try GeoIP database first (fast!)
+        if (geoReader != null) {
+            try {
+                InetAddress ipAddress = InetAddress.getByName(ip);
+                CountryResponse response = geoReader.country(ipAddress);
+                String countryCode = response.getCountry().getIsoCode();
 
+                if (countryCode != null && !countryCode.isEmpty()) {
+                    System.out.println("Country encontrado para o node na db: " + countryCode);
+                    return countryCode;
+                }
+            } catch (IOException | GeoIp2Exception e) {
+                // IP not found in database, fall through to API
+            }
+        }
+
+        // Fallback to HTTP API (slow!)
+        try {
             String url = String.format("http://ip-api.com/json/%s?fields=countryCode", ip);
 
             HttpRequest req = HttpRequest.newBuilder()
@@ -171,7 +197,7 @@ public class ConsensusParser {
 
             JsonNode node = mapper.readTree(resp.body());
             String country = node.path("countryCode").asText("Unknown");
-            
+
             return country;
 
         } catch (Exception e) {
@@ -179,5 +205,13 @@ public class ConsensusParser {
         }
     }
 
-
+    public void close() {
+        try {
+            if (geoReader != null) {
+                geoReader.close();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 }
